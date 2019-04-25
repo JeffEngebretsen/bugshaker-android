@@ -21,11 +21,11 @@ ext {
     // Library info:
     libraryVersion = '2.0.0'
     libraryName = 'bugshaker'
-    libraryGroupId = 'com.github.stkent'
+    libraryGroupId = 'com.jeffengebretsen'
     libraryArtifactId = 'bugshaker'
     libraryDescription = 'Shake to send a bug report!'
     libraryInceptionYear = '2016'
-    libraryGitHubRepoName = 'stkent/bugshaker-android'
+    libraryGitHubRepoName = 'JeffEngebretsen/bugshaker-android'
     libraryGitHubUrl = "https://github.com/${libraryGitHubRepoName}"
     libraryIssueTrackerUrl = "${libraryGitHubUrl}/issues"
     libraryWebsiteUrl = libraryGitHubUrl
@@ -34,9 +34,9 @@ ext {
     libraryLicenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.html'
 
     // Developer info:
-    developerId = 'stkent'
-    developerName = 'Stuart Kent'
-    developerEmail = 'skent.dev@gmail.com'
+    developerId = 'JeffEngebretsen'
+    developerName = 'Jeff Engebretsen'
+    developerEmail = 'me@JeffEngebretsen.com'
 
     // Bintray categorization information:
     bintrayRepo = 'android-libraries'
@@ -147,5 +147,4 @@ install {
     }
 }
 
-apply from: 'https://raw.githubusercontent.com/stkent/JCenter/master/bintray1.7.3.gradle'
-apply from: 'https://raw.githubusercontent.com/stkent/JCenter/master/install1.5.gradle'
+apply from: 'bintray.gradle'
