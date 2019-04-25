@@ -27,16 +27,19 @@ import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.util.Pair;
 import android.view.WindowManager;
 
 import com.github.stkent.bugshaker.ActivityReferenceManager;
 import com.github.stkent.bugshaker.flow.dialog.DialogProvider;
+import com.github.stkent.bugshaker.flow.dialog.OnCategoryClicked;
 import com.github.stkent.bugshaker.flow.email.screenshot.ScreenshotProvider;
 import com.github.stkent.bugshaker.utilities.ActivityUtils;
 import com.github.stkent.bugshaker.utilities.Logger;
 import com.github.stkent.bugshaker.utilities.Toaster;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import rx.Subscriber;
@@ -73,59 +76,93 @@ public final class FeedbackEmailFlowManager {
     @Nullable
     private Dialog alertDialog;
 
-    private String[] emailAddresses;
+    private List<Pair<String, List<String>>> emailAddresses;
     private String emailSubjectLine;
     private boolean ignoreFlagSecure;
 
-    private final OnClickListener reportBugClickListener = new OnClickListener() {
+    private final OnClickListener shakeConfirmClickListener = new OnClickListener() {
         @Override
         public void onClick(final DialogInterface dialog, final int which) {
             final Activity activity = activityReferenceManager.getValidatedActivity();
             if (activity == null) {
                 return;
             }
-
-            if (shouldAttemptToCaptureScreenshot(activity)) {
-                if (emailCapabilitiesProvider.canSendEmailsWithAttachments()) {
-                    screenshotProvider.getScreenshotUri(activity)
-                            .single()
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(AndroidSchedulers.mainThread())
-                            .subscribe(new Subscriber<Uri>() {
-                                @Override
-                                public void onCompleted() {
-                                    // This method intentionally left blank.
-                                }
-
-                                @Override
-                                public void onError(final Throwable e) {
-                                    final String errorString = "Screenshot capture failed";
-                                    toaster.toast(errorString);
-                                    logger.e(errorString);
-
-                                    logger.printStackTrace(e);
-
-                                    sendEmailWithoutScreenshot(activity);
-                                }
-
-                                @Override
-                                public void onNext(final Uri uri) {
-                                    sendEmailWithScreenshot(activity, uri);
-                                }
-                            });
-                } else {
-                    sendEmailWithoutScreenshot(activity);
-                }
-            } else {
-                final String warningString = "Window is secured; no screenshot taken";
-
-                toaster.toast(warningString);
-                logger.d(warningString);
-
-                sendEmailWithoutScreenshot(activity);
-            }
+            askForBugCategory(activity);
         }
     };
+
+    private final OnCategoryClicked bugCategoryClickListener = new OnCategoryClicked() {
+        @Override
+        public void onClick(String category) {
+            final Activity activity = activityReferenceManager.getValidatedActivity();
+            if (activity == null) {
+                return;
+            }
+            ArrayList<String> emails = new ArrayList<>();
+            for (Pair<String, List<String>> next : emailAddresses) {
+                if (next.first.equals(category)) {
+                    emails.addAll(next.second);
+                    break;
+                }
+            }
+            String[] emailAddresses = new String[emails.size()];
+            emails.toArray(emailAddresses);
+
+            composeEmail(activity, emailAddresses);
+        }
+    };
+
+    private void askForBugCategory(Activity activity) {
+        Iterator<Pair<String, List<String>>> iter = emailAddresses.iterator();
+        List<String> categories = new ArrayList<>();
+        while (iter.hasNext()) {
+            categories.add(iter.next().first);
+        }
+        alertDialog = alertDialogProvider.getBugCategoryDialog(activity, categories, bugCategoryClickListener);
+        alertDialog.show();
+    }
+
+    private void composeEmail(final Activity activity, final String[] emails) {
+        if (shouldAttemptToCaptureScreenshot(activity)) {
+            if (emailCapabilitiesProvider.canSendEmailsWithAttachments()) {
+                screenshotProvider.getScreenshotUri(activity)
+                        .single()
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new Subscriber<Uri>() {
+                            @Override
+                            public void onCompleted() {
+                                // This method intentionally left blank.
+                            }
+
+                            @Override
+                            public void onError(final Throwable e) {
+                                final String errorString = "Screenshot capture failed";
+                                toaster.toast(errorString);
+                                logger.e(errorString);
+
+                                logger.printStackTrace(e);
+
+                                sendEmailWithoutScreenshot(activity, emails);
+                            }
+
+                            @Override
+                            public void onNext(final Uri uri) {
+                                sendEmailWithScreenshot(activity, emails, uri);
+                            }
+                        });
+            } else {
+                sendEmailWithoutScreenshot(activity, emails);
+            }
+        } else {
+            final String warningString = "Window is secured; no screenshot taken";
+
+            toaster.toast(warningString);
+            logger.d(warningString);
+
+            sendEmailWithoutScreenshot(activity, emails);
+        }
+    }
 
     public FeedbackEmailFlowManager(
             @NonNull final Context applicationContext,
@@ -157,7 +194,7 @@ public final class FeedbackEmailFlowManager {
     }
 
     public void startFlowIfNeeded(
-            @NonNull final String[] emailAddresses,
+            @NonNull final List<Pair<String, List<String>>> emailAddresses,
             @Nullable final String emailSubjectLine,
             final boolean ignoreFlagSecure) {
 
@@ -166,7 +203,7 @@ public final class FeedbackEmailFlowManager {
             return;
         }
 
-        this.emailAddresses = Arrays.copyOf(emailAddresses, emailAddresses.length);
+        this.emailAddresses = emailAddresses;
         this.emailSubjectLine = emailSubjectLine;
         this.ignoreFlagSecure = ignoreFlagSecure;
 
@@ -183,7 +220,7 @@ public final class FeedbackEmailFlowManager {
             return;
         }
 
-        alertDialog = alertDialogProvider.getAlertDialog(currentActivity, reportBugClickListener);
+        alertDialog = alertDialogProvider.getShakeConfirmAlertDialog(currentActivity, shakeConfirmClickListener);
         alertDialog.show();
     }
 
@@ -217,7 +254,7 @@ public final class FeedbackEmailFlowManager {
 
     private void sendEmailWithScreenshot(
             @NonNull final Activity activity,
-            @NonNull final Uri screenshotUri) {
+            @NonNull String[] emailAddresses, @NonNull final Uri screenshotUri) {
 
         final Intent feedbackEmailIntent = feedbackEmailIntentProvider.getFeedbackEmailIntent(
                 emailAddresses,
@@ -240,7 +277,8 @@ public final class FeedbackEmailFlowManager {
         logger.d("Sending email with screenshot.");
     }
 
-    private void sendEmailWithoutScreenshot(@NonNull final Activity activity) {
+    private void sendEmailWithoutScreenshot(@NonNull final Activity activity,
+                                            @NonNull String[] emailAddresses) {
         final Intent feedbackEmailIntent = feedbackEmailIntentProvider.getFeedbackEmailIntent(
                 emailAddresses,
                 emailSubjectLine);

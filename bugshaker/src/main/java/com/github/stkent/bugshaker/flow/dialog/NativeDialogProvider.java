@@ -21,12 +21,18 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.support.annotation.NonNull;
+import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
+
+import com.github.stkent.bugshaker.R;
+
+import java.util.List;
 
 public final class NativeDialogProvider implements DialogProvider {
 
     @NonNull
     @Override
-    public Dialog getAlertDialog(
+    public Dialog getShakeConfirmAlertDialog(
             @NonNull final Activity activity,
             @NonNull final DialogInterface.OnClickListener reportBugClickListener) {
 
@@ -39,4 +45,21 @@ public final class NativeDialogProvider implements DialogProvider {
                 .create();
     }
 
+    @NonNull
+    @Override
+    public Dialog getBugCategoryDialog(@NonNull Activity activity, final List<String> categories, @NonNull final OnCategoryClicked bugCategoryClickListener) {
+        ListAdapter adapter = new ArrayAdapter<>(activity, android.R.layout.simple_list_item_single_choice, categories);
+        return new AlertDialog.Builder(activity)
+                .setTitle(R.string.select_category_title)
+                .setAdapter(adapter, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        bugCategoryClickListener.onClick(categories.get(which));
+                    }
+                })
+                .setPositiveButton(R.string.select, null)
+                .setNegativeButton(ALERT_DIALOG_NEGATIVE_BUTTON, null)
+                .setCancelable(ALERT_DIALOG_CANCELABLE)
+                .create();
+    }
 }

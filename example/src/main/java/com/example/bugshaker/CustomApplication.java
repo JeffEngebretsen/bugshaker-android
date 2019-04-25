@@ -17,9 +17,13 @@
 package com.example.bugshaker;
 
 import android.app.Application;
+import android.support.v4.util.Pair;
 
 import com.github.stkent.bugshaker.BugShaker;
 import com.github.stkent.bugshaker.flow.dialog.AlertDialogType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public final class CustomApplication extends Application {
 
@@ -28,7 +32,15 @@ public final class CustomApplication extends Application {
         super.onCreate();
 
         BugShaker.get(this)
-                 .setEmailAddresses("someone@example.com")
+                .setEmailAddresses(new ArrayList<Pair<String, List<String>>>() {{
+                                       add(new Pair<String, List<String>>("Cameras",
+                                               new ArrayList<String>() {{
+                                                   add("cameraEmail@example.com");
+                                               }}));
+                                   }},
+                        new ArrayList<String>() {{
+                            add("otherEmail@example.com");
+                        }})
                  .setLoggingEnabled(BuildConfig.DEBUG)
                  .setAlertDialogType(AlertDialogType.APP_COMPAT)
                  .assemble()

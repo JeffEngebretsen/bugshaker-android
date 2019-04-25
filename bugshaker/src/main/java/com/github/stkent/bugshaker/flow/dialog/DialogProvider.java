@@ -21,6 +21,8 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.support.annotation.NonNull;
 
+import java.util.List;
+
 public interface DialogProvider {
 
     String  ALERT_DIALOG_TITLE           = "Shake detected!";
@@ -30,8 +32,12 @@ public interface DialogProvider {
     boolean ALERT_DIALOG_CANCELABLE      = false;
 
     @NonNull
-    Dialog getAlertDialog(
+    Dialog getShakeConfirmAlertDialog(
             @NonNull final Activity activity,
             @NonNull final DialogInterface.OnClickListener reportBugClickListener);
 
+    @NonNull
+    Dialog getBugCategoryDialog(
+            @NonNull Activity activity, List<String> categories,
+            @NonNull OnCategoryClicked bugCategoryClickListener);
 }

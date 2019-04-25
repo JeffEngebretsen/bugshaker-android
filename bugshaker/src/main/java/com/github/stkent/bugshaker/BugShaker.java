@@ -21,6 +21,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.hardware.SensorManager;
 import android.support.annotation.NonNull;
+import android.support.v4.util.Pair;
 
 import com.github.stkent.bugshaker.flow.dialog.AlertDialogType;
 import com.github.stkent.bugshaker.flow.dialog.AppCompatDialogProvider;
@@ -36,6 +37,8 @@ import com.github.stkent.bugshaker.flow.email.screenshot.maps.MapScreenshotProvi
 import com.github.stkent.bugshaker.utilities.Logger;
 import com.github.stkent.bugshaker.utilities.Toaster;
 import com.squareup.seismic.ShakeDetector;
+
+import java.util.List;
 
 import static android.content.Context.SENSOR_SERVICE;
 
@@ -57,7 +60,7 @@ public final class BugShaker implements ShakeDetector.Listener {
     private Logger logger;
 
     // Instance configuration:
-    private String[] emailAddresses;
+    private List<Pair<String, List<String>>> emailAddresses;
     private String emailSubjectLine;
     private AlertDialogType alertDialogType = AlertDialogType.NATIVE;
     private boolean ignoreFlagSecure        = false;
@@ -102,17 +105,19 @@ public final class BugShaker implements ShakeDetector.Listener {
      * (Required) Defines one or more email addresses to send bug reports to. This method MUST be called before calling
      * <code>assemble</code>. This method CANNOT be called after calling <code>assemble</code> or <code>start</code>.
      *
-     * @param emailAddresses one or more email addresses
+     * @param emailsByCategory A list of category email list pairs for the user to pick from
+     * @param otherEmails one or more email addresses for no category
      * @return the current <code>BugShaker</code> instance (to allow for method chaining)
      */
     @NonNull
-    public BugShaker setEmailAddresses(@NonNull final String... emailAddresses) {
+    public BugShaker setEmailAddresses(@NonNull List<Pair<String, List<String>>> emailsByCategory, @NonNull final List<String> otherEmails) {
         if (assembled || startAttempted) {
             throw new IllegalStateException(
                     "Configuration must be complete before calling assemble or start");
         }
 
-        this.emailAddresses = emailAddresses;
+        emailsByCategory.add(new Pair<>("Other", otherEmails));
+        this.emailAddresses = emailsByCategory;
         return this;
     }
 
