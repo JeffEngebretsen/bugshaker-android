@@ -14,46 +14,39 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.github.stkent.bugshaker;
+package com.github.stkent.bugshaker
 
-import android.app.Activity;
-import android.app.Application;
-import android.os.Bundle;
+import android.app.Activity
+import android.app.Application
+import android.os.Bundle
 
-abstract class SimpleActivityLifecycleCallback implements Application.ActivityLifecycleCallbacks {
+internal abstract class SimpleActivityLifecycleCallback : Application.ActivityLifecycleCallbacks {
 
-    @Override
-    public void onActivityCreated(final Activity activity, final Bundle savedInstanceState) {
+    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         // This method intentionally left blank
     }
 
-    @Override
-    public void onActivityResumed(final Activity activity) {
+    override fun onActivityResumed(activity: Activity) {
         // This method intentionally left blank
     }
 
-    @Override
-    public void onActivityStarted(final Activity activity) {
+    override fun onActivityStarted(activity: Activity) {
         // This method intentionally left blank
     }
 
-    @Override
-    public void onActivityPaused(final Activity activity) {
+    override fun onActivityPaused(activity: Activity) {
         // This method intentionally left blank
     }
 
-    @Override
-    public void onActivityStopped(final Activity activity) {
+    override fun onActivityStopped(activity: Activity) {
         // This method intentionally left blank
     }
 
-    @Override
-    public void onActivitySaveInstanceState(final Activity activity, final Bundle outState) {
+    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
         // This method intentionally left blank
     }
 
-    @Override
-    public void onActivityDestroyed(final Activity activity) {
+    override fun onActivityDestroyed(activity: Activity) {
         // This method intentionally left blank
     }
 

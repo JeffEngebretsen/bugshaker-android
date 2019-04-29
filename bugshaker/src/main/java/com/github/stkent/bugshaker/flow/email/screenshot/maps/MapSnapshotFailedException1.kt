@@ -14,20 +14,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.github.stkent.bugshaker.flow.email;
+package com.github.stkent.bugshaker.flow.email.screenshot.maps
 
-import android.os.Build;
-import android.support.annotation.NonNull;
+/**
+ * Exception thrown to indicate that our attempt to capture a snapshot of an GoogleMap failed.
+ */
+class MapSnapshotFailedException internal constructor() : Exception(DETAIL_MESSAGE) {
+    companion object {
 
-public final class Environment {
-
-    @NonNull
-    public String getAndroidVersionName() {
-        return Build.VERSION.RELEASE;
-    }
-
-    public int getAndroidVersionCode() {
-        return Build.VERSION.SDK_INT;
+        private val DETAIL_MESSAGE = "GoogleMap snapshot capture failed."
     }
 
 }

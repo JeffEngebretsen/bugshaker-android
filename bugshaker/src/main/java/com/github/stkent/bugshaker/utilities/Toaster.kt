@@ -14,27 +14,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.github.stkent.bugshaker.utilities;
+package com.github.stkent.bugshaker.utilities
 
-import android.content.Context;
-import android.support.annotation.NonNull;
-import android.widget.Toast;
+import android.content.Context
+import android.widget.Toast
 
-public final class Toaster {
+class Toaster(private val applicationContext: Context) {
 
-    @NonNull
-    private final Context applicationContext;
-
-    public Toaster(@NonNull final Context applicationContext) {
-        this.applicationContext = applicationContext;
-    }
-
-    public void toast(@NonNull final String message) {
+    fun toast(message: String) {
         Toast.makeText(
                 applicationContext,
                 message,
                 Toast.LENGTH_LONG)
-                .show();
+                .show()
     }
 
 }

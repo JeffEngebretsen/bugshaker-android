@@ -14,10 +14,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.github.stkent.bugshaker.flow.dialog;
+package com.github.stkent.bugshaker.flow.email
 
-public enum AlertDialogType {
+import android.os.Build
 
-    NATIVE, APP_COMPAT
+class Environment {
+
+    val androidVersionName: String
+        get() = Build.VERSION.RELEASE
+
+    val androidVersionCode: Int
+        get() = Build.VERSION.SDK_INT
 
 }

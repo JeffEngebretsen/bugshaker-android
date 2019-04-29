@@ -1,85 +1,103 @@
-// Tested against v1.7.3 of the Gradle Bintray Plugin
-// https://github.com/bintray/gradle-bintray-plugin
-
+/**
+ * Provides the functionality to upload to local maven repositories (for testing
+ * purposes) and to push to jcenter for official releases
+ */
+apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
-android.libraryVariants.all { variant ->
-
-    def variantName = variant.name.capitalize()
-    def javaDocTaskName = "generate${variantName}Javadoc"
-
-    task(javaDocTaskName, type: Javadoc, dependsOn: "assemble${variantName}") {
-        failOnError false
-        title = "$name $version API"
-        description "Generates Javadoc for $variant.name."
-        source = variant.javaCompiler.source
-        ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
-        classpath = variant.javaCompiler.classpath + files(ext.androidJar)
-        options.links("http://docs.oracle.com/javase/7/docs/api/")
-        options.linksOffline("http://d.android.com/reference", "${android.sdkDirectory}/docs/reference")
-        exclude '**/BuildConfig.java'
-        exclude '**/R.java'
-    }
-
-    task ("generate${variantName}JavadocJar", type: Jar, dependsOn: javaDocTaskName) {
-        classifier = javaDocTaskName
-        from getTasksByName(javaDocTaskName, true).destinationDir
-    }
-
-    task ("generate${variantName}SourcesJar", type: Jar) {
-        from variant.javaCompiler.source
-        classifier = 'sources'
-    }
-
+task androidJavaDoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    options.encoding "UTF-8"
+    options.charSet 'UTF-8'
+    options.author true
+    options.version true
+    failOnError false
 }
 
-afterEvaluate {
-    artifacts {
-        archives generateReleaseJavadocJar
-        archives generateReleaseSourcesJar
+task androidJavaDocJar(type: Jar, dependsOn: androidJavaDoc) {
+    archiveClassifier.set('javadoc')
+    from androidJavaDoc.destinationDir
+}
+
+task androidSourcesJar(type: Jar) {
+    archiveClassifier.set('sources')
+    from android.sourceSets.main.java.srcDirs
+}
+
+/**
+ * Bintray Deploy
+ * `$ ./gradlew clean bugshaker:assembleRelease androidJavaDocJar androidSourcesJar generatePomFileForJcenterPublication bintrayUpload`
+ */
+publishing {
+    publications {
+        jcenter(MavenPublication) {
+            groupId project.getLibraryInfo().groupId
+            artifactId project.getLibraryInfo().artifactId
+            version project.getLibraryInfo().versionName
+
+            artifact bundleReleaseAar
+            artifact androidJavaDocJar
+            artifact androidSourcesJar
+
+            // The generated POM doesn't include dependencies when building Android artifacts, so we manually
+            // add the dependencies to the POM here
+            pom.withXml {
+                def rootNode = asNode().appendNode('dependencies')
+
+                /**
+                 * Helper method to add dependencies to the POM node
+                 */
+                ext.addDependency = { Node dependenciesNode, Dependency dependency, String dependencyScope->
+                    // We don't add incomplete dependencies
+                    if (dependency.name == null ||
+                            dependency.name == 'unspecified' ||
+                            dependency.group == null ||
+                            dependency.version == null) {
+                        return
+                    }
+
+                    def dependencyNode = dependenciesNode.appendNode('dependency')
+                    dependencyNode.appendNode('groupId', dependency.group)
+                    dependencyNode.appendNode('artifactId', dependency.name)
+                    dependencyNode.appendNode('version', dependency.version)
+                    dependencyNode.appendNode('scope', dependencyScope)
+                }
+
+                // Iterate over the implementation dependencies, adding a <dependency> node for each
+                configurations.implementation.dependencies.each {
+                    addDependency(rootNode, it, "runtime")
+                }
+
+                // Iterate over the api dependencies, adding a <dependency> node for each
+                configurations.api.dependencies.each {
+                    addDependency(rootNode, it, "compile")
+                }
+            }
+        }
     }
 }
 
-ext {
-    // command-line deployment
-    bintrayUserParameterName = 'bintrayUser'
-    bintrayKeyParameterName = 'bintrayKey'
-
-    // CI deployment
-    bintrayUserEnvVarName = 'BINTRAY_USER'
-    bintrayKeyEnvVarName = 'BINTRAY_KEY'
-}
-
+/**
+ * Configure the Bintray repository values
+ */
 bintray {
-    user = project.hasProperty(bintrayUserParameterName) ?
-            project.property(bintrayUserParameterName) : System.getenv(bintrayUserEnvVarName)
-
-    key = project.hasProperty(bintrayKeyParameterName) ?
-            project.property(bintrayKeyParameterName) : System.getenv(bintrayKeyEnvVarName)
-
-    dryRun = false
-    publish = false
-    override = false
-
-    configurations = ['archives']
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    setPublications('jcenter')
 
     pkg {
-        repo = bintrayRepo
-        name = libraryName
-        desc = libraryDescription
-        websiteUrl = libraryWebsiteUrl
-        vcsUrl = "${libraryGitHubUrl}.git"
-        labels = libraryLabels
+        userOrg = 'jeffengebretsen'
+        repo = 'maven'
+        name = 'bugshaker'
         licenses = ['Apache-2.0']
-        publicDownloadNumbers = true
-
-        githubRepo = libraryGitHubRepoName
-        //  githubReleaseNotesFile = 'CHANGELOG.md'
-        issueTrackerUrl = libraryIssueTrackerUrl
+        desc = ''
+        vcsUrl = 'https://github.com/JeffEngebretsen/bugshaker-android'
+        issueTrackerUrl = 'https://github.com/JeffEngebretsen/bugshaker-android/issues'
+        githubRepo = 'https://github.com/JeffEngebretsen/bugshaker-android'
 
         version {
-            name = libraryVersion
-            desc = libraryDescription
+            name = project.getLibraryInfo().versionName
             released = new Date()
         }
     }

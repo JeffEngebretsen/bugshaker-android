@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 27
@@ -47,9 +49,13 @@ dependencies {
     implementation 'com.android.support:appcompat-v7:27.0.2'
     implementation 'com.google.android.gms:play-services-maps:11.4.2'
     implementation project(':bugshaker')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 //    implementation project(path: ':bugshaker', configuration: 'releaseImplementation')
 }
 
 configurations.all {
     resolutionStrategy.force 'com.android.support:support-v4:27.0.2'
+}
+repositories {
+    mavenCentral()
 }

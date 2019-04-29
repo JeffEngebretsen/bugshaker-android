@@ -14,25 +14,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.github.stkent.bugshaker.utilities;
+package com.github.stkent.bugshaker.flow.email.screenshot
 
-import android.app.Activity;
-import android.support.annotation.NonNull;
-import android.view.View;
-import android.view.Window;
-
-public final class ActivityUtils {
-
-    public static Window getWindow(@NonNull final Activity activity) {
-        return activity.getWindow();
-    }
-
-    public static View getRootView(@NonNull final Activity activity) {
-        return getWindow(activity).getDecorView().getRootView();
-    }
-
-    private ActivityUtils() {
-
-    }
-
-}
+/**
+ * Exception thrown to indicate that we attempted to capture a screenshot of an Activity
+ * whose width and/or height is 0.
+ */
+internal class InvalidActivitySizeException(throwable: Throwable) : Exception(throwable)

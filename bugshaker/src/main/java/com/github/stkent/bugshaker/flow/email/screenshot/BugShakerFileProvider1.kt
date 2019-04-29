@@ -14,16 +14,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.github.stkent.bugshaker.flow.email.screenshot;
+package com.github.stkent.bugshaker.flow.email.screenshot
+
+import android.support.v4.content.FileProvider
 
 /**
- * Exception thrown to indicate that we attempted to capture a screenshot of an Activity
- * whose width and/or height is 0.
+ * Providing a custom `FileProvider` prevents manifest `<provider>` name collisions.
+ *
+ * See https://developer.android.com/guide/topics/manifest/provider-element.html for details.
  */
-final class InvalidActivitySizeException extends Exception {
-
-    InvalidActivitySizeException(final Throwable throwable) {
-        super(throwable);
-    }
-
-}
+class BugShakerFileProvider : FileProvider()// This class intentionally left blank.

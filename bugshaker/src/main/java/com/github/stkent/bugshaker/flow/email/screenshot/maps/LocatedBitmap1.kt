@@ -14,17 +14,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.github.stkent.bugshaker.flow.email.screenshot;
+package com.github.stkent.bugshaker.flow.email.screenshot.maps
 
-import android.support.v4.content.FileProvider;
+import android.graphics.Bitmap
 
-/**
- * Providing a custom {@code FileProvider} prevents manifest {@code <provider>} name collisions.
- *
- * See https://developer.android.com/guide/topics/manifest/provider-element.html for details.
- */
-public class BugShakerFileProvider extends FileProvider {
-
-    // This class intentionally left blank.
-
-}
+/* default */ internal class LocatedBitmap/* default */(/* default */ val bitmap: Bitmap, /* default */ val location: IntArray)

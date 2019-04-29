@@ -14,17 +14,33 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.github.stkent.bugshaker.flow.email.screenshot.maps;
+package com.github.stkent.bugshaker.utilities
 
-/**
- * Exception thrown to indicate that our attempt to capture a snapshot of an GoogleMap failed.
- */
-public final class MapSnapshotFailedException extends Exception {
+import android.util.Log
 
-    private static final String DETAIL_MESSAGE = "GoogleMap snapshot capture failed.";
+class Logger(private val loggingEnabled: Boolean) {
 
-    MapSnapshotFailedException() {
-        super(DETAIL_MESSAGE);
+    fun d(message: CharSequence) {
+        if (loggingEnabled) {
+            Log.d(TAG, message.toString())
+        }
+    }
+
+    fun e(message: CharSequence) {
+        if (loggingEnabled) {
+            Log.e(TAG, message.toString())
+        }
+    }
+
+    fun printStackTrace(throwable: Throwable) {
+        if (loggingEnabled) {
+            Log.e(TAG, "Logging caught exception", throwable)
+        }
+    }
+
+    companion object {
+
+        private val TAG = "BugShaker-Library"
     }
 
 }

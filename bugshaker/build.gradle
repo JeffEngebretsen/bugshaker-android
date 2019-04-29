@@ -4,42 +4,32 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.17.0'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'
-        classpath 'com.btkelly:gnag:2.0.0'
     }
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.ben-manes.versions'
-apply plugin: 'com.jfrog.bintray'
-apply plugin: 'com.github.dcendents.android-maven'
-apply plugin: 'gnag'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
-ext {
-    // Library info:
-    libraryVersion = '2.0.0'
-    libraryName = 'bugshaker'
-    libraryGroupId = 'com.jeffengebretsen'
-    libraryArtifactId = 'bugshaker'
-    libraryDescription = 'Shake to send a bug report!'
-    libraryInceptionYear = '2016'
-    libraryGitHubRepoName = 'JeffEngebretsen/bugshaker-android'
-    libraryGitHubUrl = "https://github.com/${libraryGitHubRepoName}"
-    libraryIssueTrackerUrl = "${libraryGitHubUrl}/issues"
-    libraryWebsiteUrl = libraryGitHubUrl
-    libraryLabels = ['android']
-    libraryLicenseName = 'Apache License Version 2.0'
-    libraryLicenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.html'
+/**
+ * Holds the information associated with the library needed for the
+ * bintray plugin to publish the artifact
+ */
+class LibraryInfo {
+    static Integer versionMajor = 2
+    static Integer versionMinor = 0
+    static Integer versionPatch = 0
 
-    // Developer info:
-    developerId = 'JeffEngebretsen'
-    developerName = 'Jeff Engebretsen'
-    developerEmail = 'me@JeffEngebretsen.com'
+    static String artifactId = 'bugshaker'
+    static String groupId = 'com.jeffengebretsen'
+    static String versionName = "${versionMajor}.${versionMinor}.${versionPatch}"
+    static Integer versionCode = versionMajor * 10_000 + versionMinor * 1_000 + versionPatch * 100
+}
 
-    // Bintray categorization information:
-    bintrayRepo = 'android-libraries'
+static def getLibraryInfo() {
+    return new LibraryInfo()
 }
 
 android {
@@ -48,8 +38,8 @@ android {
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 28
-        versionCode 1
-        versionName libraryVersion
+        versionCode getLibraryInfo().versionCode
+        versionName getLibraryInfo().versionName
     }
 
     buildTypes {
@@ -79,40 +69,11 @@ android {
 //    }
 //}
 
-gnag {
-    failOnError true
-
-    github {
-        repoName libraryGitHubRepoName
-    }
-
-    checkstyle {
-        reporterConfig project.file('config/checkstyle.xml')
-    }
-
-    pmd {
-        reporterConfig project.file('config/pmd.xml')
-    }
-
-    findbugs {
-        reporterConfig project.file('config/findbugs.xml')
-    }
-
-    ktlint {
-        enabled false
-    }
-
-    androidLint {
-        enabled true
-        severity 'Error'
-    }
-}
-
 dependencies {
     def supportLibraryVersion = '27.0.2'
     def seismicVersion = '1.0.2'
 
-    api "com.squareup:seismic:$seismicVersion" // TODO: hide this in the next breaking change
+    api "com.squareup:seismic:$seismicVersion"
     implementation 'io.reactivex:rxandroid:1.2.1'
     implementation 'io.reactivex:rxjava:1.3.4'
 
@@ -120,31 +81,10 @@ dependencies {
     implementation("com.android.support:appcompat-v7:${supportLibraryVersion}") { ext.optional = true }
 
     testImplementation 'junit:junit:4.12'
-    testImplementation 'org.mockito:mockito-core:2.13.0'
+    testImplementation 'org.mockito:mockito-core:2.24.5'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
-install {
-    repositories.mavenInstaller {
-        pom {
-            // See comment by Endre Stølsvik on https://issues.gradle.org/browse/GRADLE-1749.
-            withXml {
-                def depMap = configurations.implementation.allDependencies
-                        .matching { it.name != 'unspecified' } // Per https://github.com/bintray/gradle-bintray-plugin/tree/335059739ec560a20adaa6f31642a3948d4e838d#maven-publications
-                        .collectEntries { [it.name, it] }
-
-                asNode().dependencies.dependency.findAll {
-                    def dep = depMap.get(it.artifactId.text())
-                    return dep?.hasProperty('optional') && dep.optional
-                }.each {
-                    if (it.optional) {
-                        it.optional.value = 'true'
-                    } else {
-                        it.appendNode('optional', 'true')
-                    }
-                }
-            }
-        }
-    }
+afterEvaluate {
+    apply from: 'bintray.gradle'
 }
-
-apply from: 'bintray.gradle'

@@ -14,32 +14,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.github.stkent.bugshaker.flow.email.screenshot.maps;
+package com.example.bugshaker
 
-import android.graphics.Bitmap;
-import android.support.annotation.NonNull;
+import android.app.Application
 
-/* default */ final class LocatedBitmap {
+import com.github.stkent.bugshaker.BugShaker
 
-    @NonNull
-    private final Bitmap bitmap;
+class CustomApplication : Application() {
 
-    @NonNull
-    private final int[] location;
+    override fun onCreate() {
+        super.onCreate()
 
-    /* default */ LocatedBitmap(@NonNull final Bitmap bitmap, @NonNull final int[] location) {
-        this.bitmap = bitmap;
-        this.location = location;
-    }
-
-    @NonNull
-    /* default */ Bitmap getBitmap() {
-        return bitmap;
-    }
-
-    @NonNull
-    /* default */ int[] getLocation() {
-        return location;
+        BugShaker.withApplication(this)
+                .setEmailAddresses(listOf(Pair("Cameras", listOf("cameraEmail@example.com"))/*,
+                        Pair("Other", listOf("otherEmail@example.com"))*/))
+                .setLoggingEnabled(BuildConfig.DEBUG)
+                .assemble()
+                .start()
     }
 
 }
