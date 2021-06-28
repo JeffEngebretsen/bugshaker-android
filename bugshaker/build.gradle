@@ -20,7 +20,7 @@ apply plugin: 'kotlin-android-extensions'
 class LibraryInfo {
     static Integer versionMajor = 2
     static Integer versionMinor = 1
-    static Integer versionPatch = 2
+    static Integer versionPatch = 3
 
     static String artifactId = 'bugshaker'
     static String groupId = 'com.jeffengebretsen'
